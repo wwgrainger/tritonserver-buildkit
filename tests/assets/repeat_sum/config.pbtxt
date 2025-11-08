@@ -1,0 +1,30 @@
+
+name: "repeat_sum"
+backend: "python"
+
+input [
+  {
+    name: "IN"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+  },
+  {
+    name: "DELAY"
+    data_type: TYPE_UINT32
+    dims: [ -1 ]
+  },
+  {
+    name: "WAIT"
+    data_type: TYPE_UINT32
+    dims: [ 1 ]
+  }
+]
+output [
+  {
+    name: "SUM"
+    data_type: TYPE_INT32
+    dims: [ 1 ]
+  }
+]
+
+instance_group [{ kind: KIND_CPU }]

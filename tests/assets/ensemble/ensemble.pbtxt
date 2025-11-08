@@ -1,0 +1,43 @@
+platform: "ensemble"
+input [
+	{
+		name: "a"
+		data_type: TYPE_FP32
+		dims: [4]
+	}
+]
+output [
+	{
+		name: "c"
+		data_type: TYPE_FP32
+		dims: [4]
+	}
+]
+ensemble_scheduling {
+  step [
+    {
+      model_name: "add1"
+      model_version: -1
+      input_map {
+        key: "a"
+	    value: "a"
+      },
+      output_map {
+        key: "b"
+	    value: "b"
+      }
+    },
+    {
+      model_name: "sub1"
+      model_version: -1
+      input_map {
+        key: "b"
+	    value: "b"
+      },
+      output_map {
+        key: "c"
+	    value: "c"
+      }
+    }
+  ]
+}

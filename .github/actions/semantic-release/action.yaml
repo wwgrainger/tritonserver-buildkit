@@ -1,0 +1,97 @@
+---
+name: 'semantic-release'
+description: 'Action to use Semantic Release flows'
+inputs:
+  semantic-release-config:
+    description: Path to config file to override default for the semantic release flow
+    required: false
+    default: ""
+  github-token:
+    description: github token. Must have id-token/write contents/write actions/write permissions
+    required: true
+  semantic-release-version:
+    description: The version of semantic-release to use
+    required: false
+    default: "10.2.0"
+  verbose:
+    description: Whether to enable verbose logging
+    required: false
+    default: "false"
+
+outputs:
+  version:
+    description: The release version - not docker compatible
+    value: ${{ steps.semver.outputs.version }}
+  released:
+    description: Whether the release was published
+    value: ${{ steps.semver.outputs.released }}
+
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: determine-config
+      run: |
+        set -e
+
+        if [ "${{inputs.semantic-release-config}}" = "" ]; then
+          CONFIG_PATH="$GITHUB_ACTION_PATH/pyproject.toml"
+        else
+          CONFIG_PATH="${{inputs.semantic-release-config}}"
+        fi
+
+        CONFIG_PATH="$(realpath $CONFIG_PATH)"
+        echo "config-file=$CONFIG_PATH" >> $GITHUB_OUTPUT
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: CODEOWNERS
+
+    - shell: bash
+      run: |
+        set -e
+        pip install python-semantic-release~="${{ inputs.semantic-release-version}}" -q
+
+    - shell: bash
+      id: semver
+      env:
+          GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -e
+
+        if [ "${{ inputs.verbose }}" = "true" ]; then
+          VERBOSE="--verbose"
+        else
+          VERBOSE=""
+        fi
+
+        CFG="--config ${{ steps.determine-config.outputs.config-file }}"
+
+
+        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          semantic-release $VERBOSE $CFG version
+        else
+          # remove slashes from branch name
+          clean_branch_name=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+          # also swap any underscores for dashes
+          clean_branch_name=$(echo $clean_branch_name | sed 's/_/-/g')
+          # make lowercase
+          clean_branch_name=$(echo $clean_branch_name | tr '[:upper:]' '[:lower:]')
+          semantic-release $VERBOSE $CFG version --build-metadata $clean_branch_name
+        fi
+
+    - shell: bash
+      name: Write Summary
+      run: |
+        if [ "${{ steps.semver.outputs.released }}" = "true" ]; then
+          echo "## Release Summary" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`${{ steps.semver.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No release was made." > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This can happen if no [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) were found in the last commit range." >> $GITHUB_STEP_SUMMARY
+        fi

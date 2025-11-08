@@ -1,0 +1,40 @@
+name: semantic-release
+
+permissions:
+  id-token: write
+  contents: write
+
+on: workflow_dispatch
+
+env:
+
+  poetry-version: 1.8.4
+
+jobs:
+
+  build-and-push-python:
+    name: Publish py package
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      docker-version: ${{ steps.semver.outputs.docker-version }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Calculate next version
+        id: semver
+        uses: ./.github/actions/semantic-release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          semantic-release-config: pyproject.toml
+
+      - name: build package
+        uses: ./.github/actions/build-python-package
+        with:
+          version: ${{ steps.semver.outputs.version }}
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

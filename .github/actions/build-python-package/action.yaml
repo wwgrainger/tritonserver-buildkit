@@ -1,0 +1,40 @@
+---
+name: 'build-python-package'
+description: 'Build python package with version'
+inputs:
+  version:
+    description: The version to publish (optional). If not provided, will use the current version in pyproject.toml
+    required: false
+  python-version:
+    description: Python version to use
+    default: '3.11'
+    required: false
+  poetry-version:
+    description: Poetry version to use
+    default: '1.8.4'
+    required: false
+
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install poetry
+      id: install-poetry
+      run: |
+        pipx install poetry==${{ inputs.poetry-version }}
+      shell: bash
+
+    - name: Bump version
+      if: ${{ inputs.version }}
+      run: |
+        poetry version ${{ inputs.version }}
+      shell: bash
+
+    - name: Build distributions
+      shell: bash
+      run: |
+        poetry build

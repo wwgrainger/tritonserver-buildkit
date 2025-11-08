@@ -1,0 +1,39 @@
+name: example-repo
+models:
+  s3-model:
+    backend: pytorch
+    versions:
+      - artifact_uri: s3://test-bucket/pytorch_model/model.pt
+    test_cases:
+      - inputs:
+          a:
+            data: [1.0, 2.0, 3.0]
+            dtype: float32
+            dims: [3]
+          b:
+            data: [4.0, 5.0, 6.0]
+            dtype: float32
+            dims: [3]
+        expected_outputs:
+          add:
+            data: [5.0, 7.0, 9.0]
+            dtype: float32
+            dims: [3]
+          sub:
+            data: [-3.0, -3.0, -3.0]
+            dtype: float32
+            dims: [3]
+    inputs:
+      - name: a
+        dtype: float32
+        dims: [ -1 ]
+      - name: b
+        dtype: float32
+        dims: [ -1 ]
+    outputs:
+      - name: add
+        dtype: float32
+        dims: [ -1 ]
+      - name: sub
+        dtype: float32
+        dims: [ -1 ]

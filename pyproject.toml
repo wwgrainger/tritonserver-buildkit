@@ -1,0 +1,70 @@
+[tool.poetry]
+name = "tsbk"
+version = "1.6.0"
+description = "Provides a buildkit for constructing Triton Inference Server model repositories"
+authors = ["Grainger MLOps & Platform Team <mlopsplatformteam@grainger.com>"]
+readme = "README.md"
+packages = [
+    { include = "tsbk", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11.0,<4.0"
+pydantic = "^2.11.7"
+mlflow-backend = "^1.1.0"
+mlflow-skinny = "^2.12.0"
+boto3 = "^1.39.3"
+click = "^8.2.1"
+tritonclient = {extras = ["http", "grpc"], version = "^2.59.0"}
+pandas = "^2.3.1"
+scipy = "^1.16.0"
+triton_python_backend_mock_utils = {version = "^1.0.0"}
+msgpack = "^1.1.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+coverage = "^7.9.2"
+onnx = "==1.18.0"
+onnxruntime = "==1.22.1"
+torch = [
+    {version = "^2.0.0", markers = "sys_platform == 'darwin'", source = "pypi"},
+    {version = "^2.0.0", markers = "sys_platform == 'linux'", source = "pytorch-cpu"}
+]
+
+
+[tool.poetry.scripts]
+tsbk = "tsbk.cli:tsbk"
+
+[tool.semantic_release]
+version_variables = ["src/tsbk/__init__.py:__version__"]
+version_toml = [
+    "pyproject.toml:tool.poetry.version",
+]
+
+[tool.semantic_release.branches."main"]
+match = "main"
+
+[tool.semantic_release.branches."prerelease"]
+match = ".*"
+prerelease = true
+prerelease_token = "alpha"
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 121
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

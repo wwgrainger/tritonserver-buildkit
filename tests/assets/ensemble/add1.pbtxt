@@ -1,0 +1,16 @@
+backend: "python"
+
+input [
+  {
+    name: "a"
+    data_type: TYPE_FP32
+    dims: [ 4 ]
+  }
+]
+output [
+  {
+    name: "b"
+    data_type: TYPE_FP32
+    dims: [ 4 ]
+  }
+]

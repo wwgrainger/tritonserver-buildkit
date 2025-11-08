@@ -1,0 +1,103 @@
+name: ci
+
+on: push
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: python -m pip install pre-commit
+      shell: bash
+    - run: python -m pip freeze --local
+      shell: bash
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+    - run: |
+        pre-commit run --all-files --show-diff-on-failure --color=always
+      shell: bash
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.12'
+
+      - name: Install poetry
+        id: install-poetry
+        run: |
+          pipx install poetry==1.8.3
+        shell: bash
+
+      - name: Install dependancies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          poetry install --with dev
+        shell: bash
+
+      - name: Run Tests
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          make unit-tests
+
+  integration-tests:
+    runs-on: larger_runner
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v1
+
+      - name: Start containers
+        run: |
+          docker compose up -d
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.12'
+
+      - name: Install poetry
+        id: install-poetry
+        run: |
+          pipx install poetry==1.8.3
+        shell: bash
+
+      - name: Install dependancies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          poetry install --with dev
+        shell: bash
+
+      - name: Run Tests
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          make integration-tests
+        env:
+          AWS_ACCESS_KEY_ID: mock-key
+          AWS_SECRET_ACCESS_KEY: mock-secret
