@@ -1,0 +1,10 @@
+services:
+  localstack:
+    image: localstack/localstack:3.1.0
+    ports:
+      - "4566:4566" # LocalStack's default edge port
+      - "4571:4571" # Deprecated port, but can be included for backward compatibility
+    environment:
+      - SERVICES=s3
+      #- DEBUG=1
+      - DATA_DIR=/tmp/localstack/data

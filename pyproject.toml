@@ -15,7 +15,7 @@ mlflow-backend = "^1.1.0"
 mlflow-skinny = "^2.12.0"
 boto3 = "^1.39.3"
 click = "^8.2.1"
-tritonclient = {extras = ["http", "grpc"], version = "^2.59.0"}
+tritonclient = {extras = ["http", "grpc"], version = "<=2.60.0"}
 pandas = "^2.3.1"
 scipy = "^1.16.0"
 triton_python_backend_mock_utils = {version = "^1.0.0"}
