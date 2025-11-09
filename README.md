@@ -136,18 +136,18 @@ tsbk test model-config.yaml ./model-repo --url http://localhost:8000
 tsbk test model-config.yaml ./model-repo --url localhost:8001 --grpc
 ```
 
-### `tsbk create_test_plan`
+### `tsbk create-test-plan`
 Create a serialized test plan for CI/CD pipelines.
 
 ```bash
-tsbk create_test_plan model-config.yaml ./model-repo test-plan.msgpack
+tsbk create-test-plan model-config.yaml ./model-repo test-plan.msgpack
 ```
 
-### `tsbk run_test_plan`
+### `tsbk run-test-plan`
 Execute a serialized test plan against a running server.
 
 ```bash
-tsbk run_test_plan test-plan.msgpack --url http://localhost:8000
+tsbk run-test-plan test-plan.msgpack --url http://localhost:8000
 ```
 
 ## Examples
