@@ -1,4 +1,4 @@
-# tsbk - Triton Server Build Kit
+# tritonserver-buildkit
 
 A powerful Python toolkit for building, deploying, and testing [NVIDIA Triton Inference Server](https://github.com/triton-inference-server/server) model repositories with ease.
 
