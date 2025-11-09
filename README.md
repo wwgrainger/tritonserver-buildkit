@@ -9,7 +9,7 @@ A powerful Python toolkit for building, deploying, and testing [NVIDIA Triton In
 - Build Triton-compatible model repositories from simple configurations
 - Deploy and run Triton servers in Docker containers
 - Test model deployments with built-in validation framework
-- Integrate with MLflow for model management
+- Integrate with [mlflow_backend](https://github.com/wwgrainger/mlflow_backend) for deploying models registered with MLFlow
 
 Whether you're developing ML models locally or deploying them to production, `tsbk` streamlines the entire workflow.
 
