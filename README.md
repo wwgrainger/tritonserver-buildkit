@@ -125,7 +125,7 @@ tsbk run model-config.yaml ./model-repo --test
 ```
 
 ### `tsbk test`
-Test a running Triton server against your configuration. This requires providing test cases for your models. 
+Test a running Triton server against your configuration. This requires providing test cases for your models.
 They can be specified via YAML or programmatically in the SDK. `tsbk` also supports taking test data from MLFlow models with defined `example_inputs`.
 
 ```bash

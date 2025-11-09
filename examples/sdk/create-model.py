@@ -1,8 +1,7 @@
-
-import torch
-import onnx
 import mlflow
 import numpy as np
+import onnx
+import torch
 
 
 # Create Onnx model
@@ -10,10 +9,11 @@ class AddSubModel(torch.nn.Module):
     def forward(self, a, b):
         return a + b, a - b
 
+
 model = AddSubModel()
 model_path = "model.onnx"
 dummy_input = (torch.randn(1, 3), torch.randn(1, 3))
-torch.onnx.export(model, dummy_input, model_path, input_names=['a', 'b'], output_names=['add', 'sub'])
+torch.onnx.export(model, dummy_input, model_path, input_names=["a", "b"], output_names=["add", "sub"])
 
 onnx_model = onnx.load(model_path)
 

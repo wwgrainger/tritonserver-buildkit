@@ -1,6 +1,6 @@
 # Config Based Deployments
 
-`tsbk` (Triton Server Build Kit) allows you to define and deploy Triton Inference Server model repositories using simple YAML configuration files. 
+`tsbk` (Triton Server Build Kit) allows you to define and deploy Triton Inference Server model repositories using simple YAML configuration files.
 This example demonstrates an example configuration and how to use `tsbk` to build, run, and test models based on that configuration.
 
 ## Prerequisites
@@ -78,6 +78,3 @@ After you are done, you can stop the localstack service:
 ```bash
 docker-compose down
 ```
-
-
-
