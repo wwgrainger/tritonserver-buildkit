@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 
 # env vars
 TSBK_DIR = Path(os.environ.get("TSBK_DIR", "./.tsbk"))

@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.8.1 (2025-11-18)
+
+### Bug Fixes
+
+- Set correct env
+  ([`cea1472`](https://github.com/wwgrainger/tritonserver-buildkit/commit/cea1472ae8d6f994bf7894c9a4145432770a4965))
+
+
 ## v1.8.0 (2025-11-18)
 
 ### Features
