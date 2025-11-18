@@ -15,6 +15,9 @@ jobs:
   build-and-push-python:
     name: Publish py package
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tsbk
     outputs:
       version: ${{ steps.semver.outputs.version }}
       docker-version: ${{ steps.semver.outputs.docker-version }}
