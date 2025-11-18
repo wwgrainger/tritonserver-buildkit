@@ -152,10 +152,10 @@ tsbk run-test-plan test-plan.msgpack --url http://localhost:8000
 
 ## Examples
 
-Explore the [`examples/`](examples/) directory for complete working examples:
+Explore the [`examples/`](examples) directory for complete working examples:
 
-- **[Config-based deployment](examples/config/)**: Using YAML configuration files
-- **[SDK-based deployment](examples/sdk/)**: Using the Python SDK programmatically
+- **[Config-based deployment](examples/config)**: Using YAML configuration files
+- **[SDK-based deployment](examples/sdk)**: Using the Python SDK programmatically
 
 ## Environment Variables
 
