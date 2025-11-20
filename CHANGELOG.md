@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.8.2 (2025-11-20)
+
+### Bug Fixes
+
+- Improve error messaging for databricks model downloading
+  ([`6318d22`](https://github.com/wwgrainger/tritonserver-buildkit/commit/6318d22c4f2fa93784b57dfadbfe5583a4d58fea))
+
+
 ## v1.8.1 (2025-11-18)
 
 ### Bug Fixes

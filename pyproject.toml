@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tsbk"
-version = "1.8.1"
+version = "1.8.2"
 description = "Provides a buildkit for constructing Triton Inference Server model repositories"
 authors = ["Grainger MLOps & Platform Team <mlopsplatformteam@grainger.com>"]
 readme = "README.md"
