@@ -85,14 +85,15 @@ def _download_model_by_model_uri(model_uri: str, dst_path: str):
 def _download_model_from_dbx(model_uri: str, dst_path: str):
     try:
         _download_model_by_model_uri(model_uri, dst_path)
-    except Exception:
+    except Exception as e1:
+        click.secho(f"Failed to download model by model uri from databricks: {e1}", fg="red")
         click.secho("Trying to download model by run", fg="yellow")
         try:
             _download_model_by_run(model_uri, dst_path)
-        except Exception as e:
-            click.secho(f"Failed to download model by run from databricks: {e}", fg="red")
+        except Exception as e2:
+            click.secho(f"Failed to download model by run from databricks: {e2}", fg="red")
             shutil.rmtree(dst_path, ignore_errors=True)
-            raise e
+            raise e1
 
 
 def download_mlflow_model(
