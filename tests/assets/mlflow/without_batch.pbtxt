@@ -1,16 +1,7 @@
 backend: "mlflow"
 
-input [
+instance_group [
   {
-    name: "b"
-    data_type: TYPE_FP32
-    dims: [ 4 ]
-  }
-]
-output [
-  {
-    name: "c"
-    data_type: TYPE_FP32
-    dims: [ 4 ]
+    count: 3
   }
 ]

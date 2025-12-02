@@ -1,18 +1,8 @@
 backend: "mlflow"
+max_batch_size: 20
 
-max_batch_size: 200
-
-input [
+instance_group [
   {
-    name: "a"
-    data_type: TYPE_FP32
-    dims: [ 4 ]
-  }
-]
-output [
-  {
-    name: "b"
-    data_type: TYPE_FP32
-    dims: [ 4 ]
+    count: 3
   }
 ]
