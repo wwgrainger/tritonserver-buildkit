@@ -1,0 +1,16 @@
+backend: "mlflow"
+
+input [
+  {
+    name: "b"
+    data_type: TYPE_FP32
+    dims: [ 4 ]
+  }
+]
+output [
+  {
+    name: "c"
+    data_type: TYPE_FP32
+    dims: [ 4 ]
+  }
+]

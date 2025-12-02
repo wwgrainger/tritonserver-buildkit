@@ -302,8 +302,17 @@ class TritonModel:
         if self.backend == "mlflow":
             assert not self.inputs, "'input' should not be specified in Triton config for MLflow models"
             assert not self.outputs, "'output' should not be specified in Triton config for MLflow models"
+
+            # if max_batch_size is already set, grab it's value and remove it so that it can be re-added later
+            if "max_batch_size" in self.triton_config:
+                self.max_batch_size = self.triton_config["max_batch_size"]
+                # remove max_batch_size from triton_config_text
+                lines = self.triton_config_text.splitlines()
+                lines = [line for line in lines if "max_batch_size" not in line]
+                self.triton_config_text = "\n".join(lines)
+
             mlflow_triton_config = build_config(
-                self.mlflow_model_paths[0], default_max_batch_size=self.triton_config.get("max_batch_size", 1000)
+                self.mlflow_model_paths[0], default_max_batch_size=self.max_batch_size or 1000
             )
             self.triton_config_text += "\n" + mlflow_triton_config
             self.triton_config = parse_pbtxt(content=self.triton_config_text)
