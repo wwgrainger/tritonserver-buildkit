@@ -1,0 +1,8 @@
+backend: "mlflow"
+max_batch_size: 20
+
+instance_group [
+  {
+    count: 3
+  }
+]

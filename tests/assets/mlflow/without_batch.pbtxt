@@ -1,0 +1,7 @@
+backend: "mlflow"
+
+instance_group [
+  {
+    count: 3
+  }
+]

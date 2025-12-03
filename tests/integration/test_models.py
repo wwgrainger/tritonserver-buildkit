@@ -320,3 +320,57 @@ def test_decoupled_models(assets_dir, model_repo_dir):
     assert len(test_results) == 4, "Expected four test case to run"
     for result in test_results:
         assert result.success or result.decoupled_with_http, result.message
+
+
+def test_mlflow_model_with_batch_size_no_duplication(assets_dir, mlflow_python_model, model_repo_dir):
+    """Test that max_batch_size appears only once when using an MLflow model with a config that has max_batch_size."""
+    model_repo = tsbk.TritonModelRepo(
+        name="test_mlflow_with_batch",
+        path=model_repo_dir.joinpath("test_mlflow_with_batch"),
+        models={
+            "mlflow_model_with_batch": tsbk.TritonModel(
+                config_file=assets_dir.joinpath("mlflow", "with_batch.pbtxt"),
+                versions=[tsbk.TritonModelVersion(artifact_uri=mlflow_python_model)],
+            )
+        },
+    )
+
+    model_repo.build()
+
+    # Read the generated config.pbtxt
+    config_path = model_repo_dir.joinpath("test_mlflow_with_batch", "mlflow_model_with_batch", "config.pbtxt")
+    config_text = config_path.read_text()
+
+    # Count occurrences of max_batch_size
+    max_batch_size_count = config_text.count("max_batch_size")
+
+    assert (
+        max_batch_size_count == 1
+    ), f"Expected max_batch_size to appear once, but found {max_batch_size_count} occurrences in:\n{config_text}"
+
+
+def test_mlflow_model_without_batch_size_no_duplication(assets_dir, mlflow_python_model, model_repo_dir):
+    """Test that max_batch_size appears only once when using an MLflow model with a config that doesn't have max_batch_size."""
+    model_repo = tsbk.TritonModelRepo(
+        name="test_mlflow_without_batch",
+        path=model_repo_dir.joinpath("test_mlflow_without_batch"),
+        models={
+            "mlflow_model_without_batch": tsbk.TritonModel(
+                config_file=assets_dir.joinpath("mlflow", "without_batch.pbtxt"),
+                versions=[tsbk.TritonModelVersion(artifact_uri=mlflow_python_model)],
+            )
+        },
+    )
+
+    model_repo.build()
+
+    # Read the generated config.pbtxt
+    config_path = model_repo_dir.joinpath("test_mlflow_without_batch", "mlflow_model_without_batch", "config.pbtxt")
+    config_text = config_path.read_text()
+
+    # Count occurrences of max_batch_size
+    max_batch_size_count = config_text.count("max_batch_size")
+
+    assert (
+        max_batch_size_count == 1
+    ), f"Expected max_batch_size to appear once, but found {max_batch_size_count} occurrences in:\n{config_text}"
