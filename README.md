@@ -48,6 +48,7 @@ pip install tsbk
 
 ```yaml
 name: quickstart
+cache_bust: "2026-08-04"  # Optional: rotate to rebuild all cached artifacts
 models:
   your-model-name:
     backend: onnxruntime
@@ -74,6 +75,7 @@ import tsbk
 repo = tsbk.TritonModelRepo(
     name='quickstart',
     path='./model-repo',
+    cache_bust='2026-08-04',  # Optional: rotate to rebuild all cached artifacts
     models={
         'your-model-name': tsbk.TritonModel(
             backend='onnxruntime',
@@ -92,6 +94,13 @@ repo.build()
 # Run Triton server
 repo.run()
 ```
+
+### Invalidating Build Caches
+
+Set the optional repository-level `cache_bust` value to refresh downloaded MLflow and S3 artifacts and rebuild
+cached conda packs, Triton Python stubs, and TensorRT engines. Reusing the same value reuses its cache; changing the
+value creates a new cache namespace. Existing cache entries are retained and an omitted or empty value preserves the
+legacy cache keys.
 
 ## CLI Commands
 

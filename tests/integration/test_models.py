@@ -116,6 +116,7 @@ def test_python_model(assets_dir, model_repo_dir):
                 test_cases=[test_case],
             )
         },
+        cache_bust="test",
     )
     TritonModelRepoTestPlan.from_dict(model_repo.create_test_plan().to_dict())
 
@@ -173,6 +174,7 @@ def test_mlflow_python_model(mlflow_python_model, model_repo_dir):
                 test_cases=[test_case],
             )
         },
+        cache_bust="mlflow_test",
     )
     TritonModelRepoTestPlan.from_dict(model_repo.create_test_plan().to_dict())
 

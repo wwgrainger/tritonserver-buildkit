@@ -23,6 +23,7 @@ class TritonModelRepo:
         models: dict[str, TritonModel | dict],
         triton_image: str = "nvcr.io/nvidia/tritonserver",
         triton_image_tag: str = f"{DEFAULT_TRITON_VERSION}-py3",
+        cache_bust: str | None = None,
     ):
         """A Triton Model Repository.
 
@@ -31,11 +32,13 @@ class TritonModelRepo:
             models: A dict of Triton models to deploy in the model repository.
             triton_image: The Docker image to use for the Triton server.
             triton_image_tag: The Docker image tag to use for the Triton server.
+            cache_bust: An optional value used to invalidate all model-related build caches.
         """
         self.name = name
         self.models = models
         self.triton_image = triton_image
         self.triton_image_tag = triton_image_tag
+        self.cache_bust = cache_bust or None
         self.triton_version = self.parse_triton_version(self.triton_image_tag)
 
         self.models = {
@@ -44,7 +47,12 @@ class TritonModelRepo:
 
         self.path = Path(path).absolute()
         for name, model in self.models.items():
-            model.init(name=name, repo_path=self.path, triton_version=self.triton_version)
+            model.init(
+                name=name,
+                repo_path=self.path,
+                triton_version=self.triton_version,
+                cache_bust=self.cache_bust,
+            )
 
         self._resolve_ensemble_models()
 

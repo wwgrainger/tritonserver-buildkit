@@ -24,6 +24,17 @@ def test_compute_cache_path():
         ) == Path("/my/cache/path/cache/mlflow/my-model/1")
 
 
+def test_compute_cache_path_with_cache_bust():
+    cache_dir = Path("/my/cache/path")
+    with patch("tsbk.utils.dbx.TSBK_DIR", cache_dir):
+        first = compute_cache_path("models:/my-model/1", cache_bust="release/one")
+        second = compute_cache_path("models:/my-model/1", cache_bust="release/two")
+
+    assert first != second
+    assert first.parent == Path("/my/cache/path/cache/mlflow/my-model")
+    assert "release" not in first.name
+
+
 def test_compute_cache_path_bad():
     cache_dir = Path("/my/cache/path")
     with patch("tsbk.utils.dbx.TSBK_DIR", cache_dir):

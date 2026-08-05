@@ -118,3 +118,5 @@ class TritonModelRepoSpec(BaseModel):
     """The Docker image to use for the Triton server."""
     triton_image_tag: str = f"{DEFAULT_TRITON_VERSION}-py3"
     """The Docker image tag to use for the Triton server."""
+    cache_bust: str | None = None
+    """An optional value used to invalidate cached model artifacts and generated build outputs."""

@@ -5,11 +5,13 @@ import click
 from mlflow_backend_utils.sdk import build_triton_stub as _build_triton_stub
 
 from tsbk import TSBK_DIR, TSBK_K8S_SERVICE_ACCOUNT, TSBK_S3_PREFIX
+from tsbk.utils.cache import append_cache_bust
 
 
 def build_triton_stub(
     python_version: str,
     triton_version: str,
+    cache_bust: str | None = None,
 ) -> Path:
     """Builds a conda environment given the requirements and packages it up with conda-pack and writes
     the resulting archive to the output_dir
@@ -17,6 +19,7 @@ def build_triton_stub(
     Args:
         python_version: the python version to use for the environment
         triton_version: the version of Triton to use for the stub
+        cache_bust: optional value used to invalidate the cached stub
 
     Returns:
         path to the output stub
@@ -25,15 +28,14 @@ def build_triton_stub(
 
     output_dir = TSBK_DIR.joinpath("triton_python_stubs")
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir.joinpath(f"triton_python_backend_stub-{triton_version}-{arch}-{python_version}")
+    cache_key = append_cache_bust(f"triton_python_backend_stub-{triton_version}-{arch}-{python_version}", cache_bust)
+    output_path = output_dir.joinpath(cache_key)
 
     if output_path.exists():
         return output_path
 
     if TSBK_S3_PREFIX:
-        s3_path = (
-            f"{TSBK_S3_PREFIX}/triton_python_stubs/triton_python_backend_stub-{triton_version}-{arch}-{python_version}"
-        )
+        s3_path = f"{TSBK_S3_PREFIX}/triton_python_stubs/{cache_key}"
     else:
         s3_path = None
 

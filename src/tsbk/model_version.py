@@ -47,6 +47,7 @@ class TritonModelVersion:
         self.platform: str | None = None
         self.flavor: str | None = None
         self.decoupled_transaction_policy: bool | None = None
+        self.cache_bust: str | None = None
 
     def __str__(self):
         return f"TritonModelVersion(artifact_uri={self.artifact_uri}, python_model_file={self.python_model_file}, version={self.version})"
@@ -65,6 +66,7 @@ class TritonModelVersion:
         flavor: str | None,
         model_tests: list[TestCase],
         decoupled_transaction_policy: bool,
+        cache_bust: str | None = None,
     ) -> None:
         """Initialize the model version with the given parameters."""
         self.name = name
@@ -73,11 +75,12 @@ class TritonModelVersion:
         self.platform = platform
         self.flavor = flavor
         self.decoupled_transaction_policy = decoupled_transaction_policy
+        self.cache_bust = cache_bust
         for test in model_tests:
             self.test_cases.append(deepcopy(test))
 
         if self.artifact_uri and self.artifact_uri.startswith("models:/"):
-            input_example = get_input_example_from_model(self.artifact_uri)
+            input_example = get_input_example_from_model(self.artifact_uri, cache_bust=self.cache_bust)
             if input_example is not None:
                 self.test_cases.append(TestCase(inputs=input_example, expected_outputs={}))
 
@@ -119,7 +122,7 @@ class TritonModelVersion:
         self.path.mkdir(parents=True)
         if self.artifact_uri:
             source, func = self.artifact_source
-            copy_func = partial(func, origin_path=self.artifact_uri)
+            copy_func = partial(func, origin_path=self.artifact_uri, cache_bust=self.cache_bust)
 
             match self.backend:
                 case "mlflow":
@@ -172,6 +175,7 @@ class TritonModelVersion:
                             trt_image=self.trt_compile.get("trt_image"),
                             gpu_name=self.trt_compile.get("gpu_name"),
                             instance_family=self.trt_compile.get("instance_family"),
+                            cache_bust=self.cache_bust,
                         )
 
                         # Only place the compiled plan in the version directory
