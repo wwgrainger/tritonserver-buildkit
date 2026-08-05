@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.11.0 (2026-08-05)
+
+### Features
+
+- Add cache bust parameter
+  ([`1d4c082`](https://github.com/wwgrainger/tritonserver-buildkit/commit/1d4c082fd3fe2f95f7994d2e42b4d3ff9b71d7d8))
+
+
 ## v1.10.1 (2026-04-02)
 
 ### Bug Fixes
