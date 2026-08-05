@@ -7,6 +7,7 @@ from mlflow_backend_utils.sdk import build_conda_pack as _build_conda_pack
 
 from tsbk import TSBK_DIR
 from tsbk.utils import get_platform_desc
+from tsbk.utils.cache import cache_bust_key_material
 
 CONDA_BUILD_VERSION = 5
 
@@ -17,6 +18,7 @@ def calc_hash(
     python_version: str,
     build_env: dict[str, str] = None,
     conda_extras: str = "",
+    cache_bust: str | None = None,
 ) -> str:
     """Calculates the hash for the environment based on requirements and platform
 
@@ -26,6 +28,7 @@ def calc_hash(
         python_version: python version for environment
         build_env: extra environment variables to set when running the conda build script
         conda_extras: extra conda packages to install
+        cache_bust: optional value used to invalidate the cached environment
 
     Returns:
         hash containing conda env information used as file name for this env in model repo and s3 cache.
@@ -41,12 +44,15 @@ def calc_hash(
     if build_env:
         hash_str += "".join([f"{k}_{v}" for k, v in sorted(build_env.items())]).encode()
 
+    hash_str += cache_bust_key_material(cache_bust)
+
     return hashlib.sha256(hash_str).hexdigest()
 
 
 def build_conda_env(
     python_version: str,
     requirements_path: Path,
+    cache_bust: str | None = None,
 ) -> tuple[Path, Path, dict]:
     """Builds a conda environment given the requirements and packages it up with conda-pack and writes
     the resulting archive to the output_dir
@@ -54,6 +60,7 @@ def build_conda_env(
     Args:
         python_version: the python version to use for the environment
         requirements_path: The path to the requirements file to use
+        cache_bust: optional value used to invalidate the cached environment
 
     Returns:
         path to the output archive
@@ -63,7 +70,7 @@ def build_conda_env(
     # Hash inputs
     req_bytes = requirements_path.read_bytes()
     pf = get_platform_desc().encode()
-    hsh = calc_hash(req_bytes, pf, python_version)
+    hsh = calc_hash(req_bytes, pf, python_version, cache_bust=cache_bust)
 
     env_data = {
         "python_version": python_version,

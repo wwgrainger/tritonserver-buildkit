@@ -17,6 +17,7 @@ from tsbk import (
     TSBK_K8S_SERVICE_ACCOUNT,
     TSBK_S3_PREFIX,
 )
+from tsbk.utils.cache import cache_bust_key_material
 
 DEFAULT_TRT_IMAGE = f"nvcr.io/nvidia/tensorrt:{DEFAULT_TRITON_VERSION}-py3"
 
@@ -30,6 +31,7 @@ def build_trt_engine(
     gpu_name: str | None = None,
     instance_family: str | None = None,
     preferred_methods: Iterable[Literal["docker", "kubernetes"]] = ("docker", "kubernetes"),
+    cache_bust: str | None = None,
 ) -> Path:
     """Compiles an ONNX model to a TensorRT engine plan file.
 
@@ -42,6 +44,7 @@ def build_trt_engine(
         gpu_name: Target GPU architecture for K8s scheduling (e.g., 'A10G', 'T4')
         instance_family: AWS instance family for K8s scheduling via karpenter (e.g., 'g5', 'p4d')
         preferred_methods: Execution methods to try in order
+        cache_bust: optional value used to invalidate the cached engine
 
     Returns:
         Path to the compiled .plan file
@@ -53,7 +56,7 @@ def build_trt_engine(
     # Build cache key from ONNX content hash + compile params
     onnx_hash = hashlib.sha256(onnx_path.read_bytes()).hexdigest()[:16]
     params_str = f"{precision or 'default'}-{workspace_size or 'default'}-{extra_args or ''}-{gpu_name or 'any'}-{instance_family or 'any'}-{arch}"
-    params_hash = hashlib.sha256(params_str.encode()).hexdigest()[:8]
+    params_hash = hashlib.sha256(params_str.encode() + cache_bust_key_material(cache_bust)).hexdigest()[:8]
     cache_key = f"{onnx_hash}-{params_hash}"
 
     output_dir = TSBK_DIR.joinpath("trt_engines")

@@ -102,6 +102,7 @@ class TritonModel:
         self.ensemble_models: list[tuple[str, int]] | None = None
         self.triton_version: str | None = None
         self.decoupled_transaction_policy: bool | None = None
+        self.cache_bust: str | None = None
 
     @staticmethod
     def _check_config_and_config_file_isolated(config, config_file):
@@ -147,11 +148,13 @@ class TritonModel:
         name: str,
         repo_path: Path,
         triton_version: str,
+        cache_bust: str | None = None,
     ):
         click.secho(f"Initializing {name}")
         self.name = name
         self.path = repo_path.joinpath(self.name)
         self.triton_version = triton_version
+        self.cache_bust = cache_bust
 
         if "name" in self.triton_config and self.triton_config["name"] != self.name:
             raise ValueError(
@@ -165,7 +168,7 @@ class TritonModel:
 
         self.mlflow_model_paths = list()
         for artifact_uri in mlflow_artifact_version_uris:
-            self.mlflow_model_paths.append(download_mlflow_model(artifact_uri))
+            self.mlflow_model_paths.append(download_mlflow_model(artifact_uri, cache_bust=self.cache_bust))
 
         mlflow_model_schemas = list()
         for mlflow_model_path in self.mlflow_model_paths:
@@ -184,7 +187,11 @@ class TritonModel:
                         f"MLflow model schemas do not match across versions, found: {self.mlflow_model_schema} and {schema}"
                     )
 
-        self.flavor = get_flavor_for_models(mlflow_artifact_version_uris) if mlflow_artifact_version_uris else None
+        self.flavor = (
+            get_flavor_for_models(mlflow_artifact_version_uris, cache_bust=self.cache_bust)
+            if mlflow_artifact_version_uris
+            else None
+        )
         flavor_backend_map = {  # map mlflow flavors to triton backends
             "python": "mlflow",
             "pytorch": "pytorch",
@@ -223,7 +230,9 @@ class TritonModel:
             raise ValueError("python_version can only be specified for python models")
 
         if not self.python_version and self.backend in {"python", "mlflow"} and mlflow_artifact_version_uris:
-            self.python_version = get_python_version_for_mlflow_models(mlflow_artifact_version_uris)
+            self.python_version = get_python_version_for_mlflow_models(
+                mlflow_artifact_version_uris, cache_bust=self.cache_bust
+            )
         elif not self.python_version and self.backend in {"python", "mlflow"}:
             self.python_version = python_version_for_triton_version(self.triton_version)
 
@@ -234,7 +243,9 @@ class TritonModel:
             raise ValueError("requirements_file can only be specified for python models")
 
         if not self.requirements_file and self.backend in {"python", "mlflow"} and mlflow_artifact_version_uris:
-            self.requirements_file = get_mlflow_model_requirements(mlflow_artifact_version_uris)
+            self.requirements_file = get_mlflow_model_requirements(
+                mlflow_artifact_version_uris, cache_bust=self.cache_bust
+            )
 
         if self.backend == "pytorch" and self.mlflow_model_schema:
             mlflow_batch_size, mlflow_inputs, mlflow_outputs = self.mlflow_model_schema
@@ -281,6 +292,7 @@ class TritonModel:
                 self.flavor,
                 self.test_cases,
                 self.decoupled_transaction_policy,
+                self.cache_bust,
             )
             default_version = this_version + 1
 
@@ -298,6 +310,7 @@ class TritonModel:
                 self.flavor,
                 self.test_cases,
                 self.decoupled_transaction_policy,
+                self.cache_bust,
             )
             self.versions.append(ensemble_version)
             self.ensemble_models = [
@@ -380,6 +393,7 @@ class TritonModel:
             conda_pack_path, _, conda_pack_info = build_conda_env(
                 self.python_version,
                 Path(self.requirements_file),
+                cache_bust=self.cache_bust,
             )
             dst_path = self.path.joinpath(conda_pack_path.name)
             click.secho(f"Creating hard link: {dst_path} -> {conda_pack_path}", fg="green")
@@ -394,7 +408,11 @@ class TritonModel:
             and self.python_version != python_version_for_triton_version(self.triton_version)
             and prep_triton_stub
         ):
-            stub_path = build_triton_stub(self.python_version, f"r{self.triton_version}")
+            stub_path = build_triton_stub(
+                self.python_version,
+                f"r{self.triton_version}",
+                cache_bust=self.cache_bust,
+            )
             dst_path = self.path.joinpath("triton_python_backend_stub")
             click.secho(f"Copying Triton Stub: {dst_path} -> {stub_path}", fg="green")
             shutil.copy2(stub_path, dst_path)

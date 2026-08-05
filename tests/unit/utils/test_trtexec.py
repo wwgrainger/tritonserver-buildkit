@@ -702,12 +702,20 @@ class TestCreateTrtJobManifest:
 
 class TestBuildTrtEngineCaching:
     def _compute_cache_key(
-        self, onnx_content, precision=None, workspace_size=None, extra_args=None, gpu_name=None, instance_family=None
+        self,
+        onnx_content,
+        precision=None,
+        workspace_size=None,
+        extra_args=None,
+        gpu_name=None,
+        instance_family=None,
+        cache_bust=None,
     ):
         arch = _platform.machine()
         onnx_hash = hashlib.sha256(onnx_content).hexdigest()[:16]
         params_str = f"{precision or 'default'}-{workspace_size or 'default'}-{extra_args or ''}-{gpu_name or 'any'}-{instance_family or 'any'}-{arch}"
-        params_hash = hashlib.sha256(params_str.encode()).hexdigest()[:8]
+        cache_bust_material = b"" if not cache_bust else b"\x00cache_bust\x00" + cache_bust.encode()
+        params_hash = hashlib.sha256(params_str.encode() + cache_bust_material).hexdigest()[:8]
         return f"{onnx_hash}-{params_hash}"
 
     def test_cache_hit_returns_immediately(self, tmp_path, monkeypatch):
@@ -798,6 +806,23 @@ class TestBuildTrtEngineCaching:
         key2 = self._compute_cache_key(content, precision="fp16", workspace_size=2048, gpu_name="A10G")
 
         assert key1 == key2
+
+    def test_cache_bust_selects_distinct_cached_engine(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("tsbk.utils.trtexec.TSBK_DIR", tmp_path)
+
+        onnx_file = tmp_path / "model.onnx"
+        onnx_file.write_bytes(b"fake onnx content")
+        first_key = self._compute_cache_key(b"fake onnx content", cache_bust="release-1")
+        second_key = self._compute_cache_key(b"fake onnx content", cache_bust="release-2")
+        cache_dir = tmp_path / "trt_engines"
+        cache_dir.mkdir()
+        first_plan = cache_dir / f"{first_key}.plan"
+        second_plan = cache_dir / f"{second_key}.plan"
+        first_plan.write_bytes(b"first")
+        second_plan.write_bytes(b"second")
+
+        assert build_trt_engine(onnx_file, cache_bust="release-1") == first_plan
+        assert build_trt_engine(onnx_file, cache_bust="release-2") == second_plan
 
 
 # ---------------------------------------------------------------------------

@@ -32,3 +32,13 @@ def test_calc_hash():
     assert calc_hash(b"my\nrequirements", b"my_platform", "3.10") != calc_hash(
         b"my\nrequirements", b"my_platform", "3.11"
     )
+
+
+def test_cache_bust_affects_hash_without_changing_legacy_hash():
+    legacy_hash = calc_hash(b"my\nrequirements", b"my_platform", "3.10")
+
+    assert calc_hash(b"my\nrequirements", b"my_platform", "3.10", cache_bust="") == legacy_hash
+    assert calc_hash(b"my\nrequirements", b"my_platform", "3.10", cache_bust="release-1") != legacy_hash
+    assert calc_hash(b"my\nrequirements", b"my_platform", "3.10", cache_bust="release-1") != calc_hash(
+        b"my\nrequirements", b"my_platform", "3.10", cache_bust="release-2"
+    )

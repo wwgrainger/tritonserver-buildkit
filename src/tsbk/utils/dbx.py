@@ -14,14 +14,16 @@ from mlflow.tracking import MlflowClient
 
 from tsbk import TSBK_DIR
 from tsbk.utils import link_or_copy, parse_requirements_file
+from tsbk.utils.cache import append_cache_bust
 
 
-def compute_cache_path(models_uri: str) -> Path:
+def compute_cache_path(models_uri: str, cache_bust: str | None = None) -> Path:
     """
     Outputs a unique path for caching the specified dbx model locally.
 
     Args:
         models_uri: the models uri to cache
+        cache_bust: optional value used to invalidate the cached model
 
     Returns:
         provided cache_dir with the model workspace, name, and version/tag appended
@@ -29,6 +31,7 @@ def compute_cache_path(models_uri: str) -> Path:
     if not models_uri.startswith("models:/"):
         raise ValueError(f"{models_uri} is not a valid model URI")
     model_dir = models_uri.split("models:/")[-1]
+    model_dir = append_cache_bust(model_dir, cache_bust)
     return TSBK_DIR.joinpath("cache/mlflow", model_dir)
 
 
@@ -99,18 +102,20 @@ def _download_model_from_dbx(model_uri: str, dst_path: str):
 def download_mlflow_model(
     origin_path: str,
     dst_path: Optional[str] = None,
+    cache_bust: str | None = None,
 ) -> Path:
     """Downloads an MLFLow model to a specific directory in the ARTIFACT_CACHE_DIR where it can be used in Symlinks in Triton model directories. Symlinks are used to allow various Triton model directories to share the same model artifact.
 
     Args:
         origin_path: the model to download in mlflow model format - models:/<your-model>/<your-model-version>
         dst_path: Path where a symlink to the cached model artifact will be created for Triton to use when serving the model. If not provided, the model will be saved at a designated path in the ARTIFACT_CACHE_DIR and no symlink to this path will be created.
+        cache_bust: optional value used to invalidate the cached model
 
     Returns:
         The path to the model
     """
     # we can't use symlinking on DBX cluster, so if a dst_path is provided, we download the model directly to that path
-    local_cache_path = compute_cache_path(origin_path)
+    local_cache_path = compute_cache_path(origin_path, cache_bust=cache_bust)
     if not local_cache_path.exists() or not list(local_cache_path.glob("*")):
         local_cache_path.parent.mkdir(parents=True, exist_ok=True)
         click.secho(f"Downloading: {origin_path} -> {local_cache_path} (cache miss)", fg="blue")
@@ -123,7 +128,7 @@ def download_mlflow_model(
         return local_cache_path
 
 
-def get_mlflow_model_requirements(model_uris: list[str]) -> Path:
+def get_mlflow_model_requirements(model_uris: list[str], cache_bust: str | None = None) -> Path:
     """
     Pulls artifacts for any MLFlow models provided in configuration and verifies that all requirements files are matching.
 
@@ -134,7 +139,7 @@ def get_mlflow_model_requirements(model_uris: list[str]) -> Path:
     """
     models_paths = []
     for uri in model_uris:
-        path_to_model = download_mlflow_model(uri, dst_path=None)
+        path_to_model = download_mlflow_model(uri, dst_path=None, cache_bust=cache_bust)
         models_paths.append(path_to_model)
 
     requirements_paths = [p.joinpath("requirements.txt") for p in models_paths]
@@ -147,7 +152,7 @@ def get_mlflow_model_requirements(model_uris: list[str]) -> Path:
     return requirements_paths[-1]
 
 
-def get_python_version_for_mlflow_models(model_uris: list[str]) -> str:
+def get_python_version_for_mlflow_models(model_uris: list[str], cache_bust: str | None = None) -> str:
     """Checks the python version of all the mlflow models and returns the python version to use
     Args:
         model_uris: List of model_uris to check requirements for.
@@ -156,7 +161,7 @@ def get_python_version_for_mlflow_models(model_uris: list[str]) -> str:
     """
     models_paths = []
     for uri in model_uris:
-        path_to_model = download_mlflow_model(uri, dst_path=None)
+        path_to_model = download_mlflow_model(uri, dst_path=None, cache_bust=cache_bust)
         models_paths.append(path_to_model)
 
     python_versions = set()
@@ -210,7 +215,7 @@ def find_matching_dbx_models(model_uri: str) -> list[MlflowModelVersion]:
         raise ValueError(f"Invalid model uri: {model_uri}")
 
 
-def get_flavor_for_models(model_uris: list[str]) -> str:
+def get_flavor_for_models(model_uris: list[str], cache_bust: str | None = None) -> str:
     """Checks the models metadata and returns the triton backend to use
     Args:
         model_uris: List of model_uris to check requirements for.
@@ -219,7 +224,7 @@ def get_flavor_for_models(model_uris: list[str]) -> str:
     """
     models_paths = []
     for uri in model_uris:
-        path_to_model = download_mlflow_model(uri, dst_path=None)
+        path_to_model = download_mlflow_model(uri, dst_path=None, cache_bust=cache_bust)
         models_paths.append(path_to_model)
 
     model_flavors = set()
@@ -241,8 +246,8 @@ def get_flavor_for_models(model_uris: list[str]) -> str:
         return "python"
 
 
-def get_input_example_from_model(model_uri: str) -> dict[str, np.ndarray] | None:
-    model_path = download_mlflow_model(model_uri)
+def get_input_example_from_model(model_uri: str, cache_bust: str | None = None) -> dict[str, np.ndarray] | None:
+    model_path = download_mlflow_model(model_uri, cache_bust=cache_bust)
     mlflow_config = yaml.safe_load(Path(model_path).joinpath("MLmodel").read_text())
     example_info = mlflow_config.get("saved_input_example_info")
     if example_info is None:
