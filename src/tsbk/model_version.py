@@ -175,6 +175,7 @@ class TritonModelVersion:
                             trt_image=self.trt_compile.get("trt_image"),
                             gpu_name=self.trt_compile.get("gpu_name"),
                             instance_family=self.trt_compile.get("instance_family"),
+                            gpu_toleration_key=self.trt_compile.get("gpu_toleration_key"),
                             cache_bust=self.cache_bust,
                         )
 

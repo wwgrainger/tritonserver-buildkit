@@ -538,6 +538,17 @@ class TestCreateTrtJobManifest:
         assert len(tolerations) == 1
         assert tolerations[0] == {"effect": "NoSchedule", "key": "gpu", "value": "true"}
 
+    def test_custom_gpu_toleration_key(self):
+        manifest = _create_trt_job_manifest(
+            job_name="test-job",
+            s3_model_dir="s3://b/m_model/",
+            s3_plan_path="s3://b/m.plan",
+            gpu_toleration_key="nvidia.com/gpu",
+        )
+
+        tolerations = manifest["spec"]["template"]["spec"]["tolerations"]
+        assert tolerations == [{"effect": "NoSchedule", "key": "nvidia.com/gpu", "value": "true"}]
+
     def test_gpu_resource_requests(self):
         manifest = _create_trt_job_manifest(
             job_name="test-job",
@@ -902,6 +913,23 @@ class TestBuildTrtEngineStrategy:
         build_trt_engine(onnx_file, preferred_methods=["kubernetes"])
         mock_compile.assert_called_once()
 
+    @patch("tsbk.utils.trtexec._compile_kubernetes")
+    @patch("tsbk.utils.trtexec._can_compile_kubernetes", return_value=(True, "K8s OK"))
+    def test_custom_gpu_toleration_key_passed_to_kubernetes(self, mock_can, mock_compile, tmp_path, monkeypatch):
+        monkeypatch.setattr("tsbk.utils.trtexec.TSBK_DIR", tmp_path)
+        monkeypatch.setattr("tsbk.utils.trtexec.TSBK_S3_PREFIX", "s3://bucket/prefix")
+
+        onnx_file = tmp_path / "model.onnx"
+        onnx_file.write_bytes(b"data")
+
+        build_trt_engine(
+            onnx_file,
+            gpu_toleration_key="nvidia.com/gpu",
+            preferred_methods=["kubernetes"],
+        )
+
+        assert mock_compile.call_args.kwargs["gpu_toleration_key"] == "nvidia.com/gpu"
+
     @patch("tsbk.utils.trtexec._compile_docker")
     @patch("tsbk.utils.trtexec._can_compile_docker", return_value=(True, "Docker OK"))
     def test_compile_params_passed_through(self, mock_can, mock_compile, tmp_path, monkeypatch):
@@ -1011,6 +1039,7 @@ class TestTrtCompileSpec:
             workspace_size=4096,
             extra_args="--verbose",
             gpu_name="A10G",
+            gpu_toleration_key="nvidia.com/gpu",
         )
         assert spec.enabled is True
         assert spec.trt_image == "custom:latest"
@@ -1018,6 +1047,7 @@ class TestTrtCompileSpec:
         assert spec.workspace_size == 4096
         assert spec.extra_args == "--verbose"
         assert spec.gpu_name == "A10G"
+        assert spec.gpu_toleration_key == "nvidia.com/gpu"
 
     def test_spec_defaults(self):
         from tsbk.spec import TrtCompileSpec
@@ -1029,6 +1059,7 @@ class TestTrtCompileSpec:
         assert spec.workspace_size is None
         assert spec.extra_args is None
         assert spec.gpu_name is None
+        assert spec.gpu_toleration_key is None
 
     def test_spec_forbids_extra_fields(self):
         from pydantic import ValidationError
@@ -1043,11 +1074,17 @@ class TestTrtCompileSpec:
 
         spec = TritonModelVersionSpec(
             artifact_uri="s3://bucket/model.onnx",
-            trt_compile={"enabled": True, "precision": "fp16", "gpu_name": "T4"},
+            trt_compile={
+                "enabled": True,
+                "precision": "fp16",
+                "gpu_name": "T4",
+                "gpu_toleration_key": "nvidia.com/gpu",
+            },
         )
         assert spec.trt_compile.enabled is True
         assert spec.trt_compile.precision == "fp16"
         assert spec.trt_compile.gpu_name == "T4"
+        assert spec.trt_compile.gpu_toleration_key == "nvidia.com/gpu"
 
     def test_version_spec_without_trt_compile(self):
         from tsbk.spec import TritonModelVersionSpec
