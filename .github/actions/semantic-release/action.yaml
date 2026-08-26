@@ -12,7 +12,7 @@ inputs:
   semantic-release-version:
     description: The version of semantic-release to use
     required: false
-    default: "10.2.0"
+    default: "10.6.1"
   verbose:
     description: Whether to enable verbose logging
     required: false
@@ -53,7 +53,7 @@ runs:
     - shell: bash
       run: |
         set -e
-        pip install python-semantic-release~="${{ inputs.semantic-release-version}}" -q
+        pip install python-semantic-release=="${{ inputs.semantic-release-version}}" "gitpython==3.1.45"
 
     - shell: bash
       id: semver
