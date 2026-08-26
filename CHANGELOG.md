@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.12.0 (2026-08-26)
+
+### Bug Fixes
+
+- Bump python semantic release version
+  ([`4a2bc04`](https://github.com/wwgrainger/tritonserver-buildkit/commit/4a2bc04b635b7f9c0d5b42ace34f6757d95c4c62))
+
+### Features
+
+- Support setting trt compilation key for jobs
+  ([`198117a`](https://github.com/wwgrainger/tritonserver-buildkit/commit/198117a780617c991b285878788e2c88d4a23746))
+
+
 ## v1.11.0 (2026-08-05)
 
 ### Features
