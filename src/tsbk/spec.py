@@ -61,6 +61,8 @@ class TrtCompileSpec(BaseModel):
     """Target GPU architecture for compilation. Used as Karpenter node selector for K8s scheduling (e.g., 'A10G', 'T4')."""
     instance_family: str | None = None
     """AWS instance family for K8s scheduling via Karpenter (e.g., 'g5', 'p4d')."""
+    gpu_toleration_key: str | None = None
+    """K8s toleration key for GPU nodes. Used to allow scheduling on GPU nodes with specific taints (e.g., 'nvidia.com/gpu')."""
 
 
 class TritonModelVersionSpec(BaseModel):

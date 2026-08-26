@@ -30,6 +30,7 @@ def build_trt_engine(
     trt_image: str | None = None,
     gpu_name: str | None = None,
     instance_family: str | None = None,
+    gpu_toleration_key: str = None,
     preferred_methods: Iterable[Literal["docker", "kubernetes"]] = ("docker", "kubernetes"),
     cache_bust: str | None = None,
 ) -> Path:
@@ -97,6 +98,7 @@ def build_trt_engine(
                 trt_image=trt_image,
                 gpu_name=gpu_name,
                 instance_family=instance_family,
+                gpu_toleration_key=gpu_toleration_key or "gpu",
                 k8s_shared_s3_path=s3_path,
                 k8s_service_account=TSBK_K8S_SERVICE_ACCOUNT,
             )
@@ -282,6 +284,7 @@ def _compile_kubernetes(
     trt_image: str = DEFAULT_TRT_IMAGE,
     gpu_name: str | None = None,
     instance_family: str | None = None,
+    gpu_toleration_key: str = "gpu",
     k8s_shared_s3_path: str,
     k8s_service_account: str = "default",
     **_,
@@ -318,6 +321,7 @@ def _compile_kubernetes(
         extra_args=extra_args,
         trt_image=trt_image,
         gpu_name=gpu_name,
+        gpu_toleration_key=gpu_toleration_key,
         instance_family=instance_family,
         service_account=k8s_service_account,
     )
@@ -399,6 +403,7 @@ def _create_trt_job_manifest(
     trt_image: str = DEFAULT_TRT_IMAGE,
     gpu_name: str | None = None,
     instance_family: str | None = None,
+    gpu_toleration_key: str = "gpu",
     cpu: str = "2",
     memory: str = "8Gi",
     memory_limit: str = "16Gi",
@@ -444,7 +449,7 @@ aws s3 cp /workspace/model.plan {s3_plan_path}
                     "tolerations": [
                         {
                             "effect": "NoSchedule",
-                            "key": "gpu",
+                            "key": gpu_toleration_key,
                             "value": "true",
                         },
                     ],
